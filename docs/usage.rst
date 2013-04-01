@@ -38,12 +38,21 @@ Collect static
 
 Pipeline integrates with staticfiles, you just need to setup ``STATICFILES_STORAGE`` to ::
 
-    STATICFILES_STORAGE = 'pipeline.storage.PipelineStorage'
+    STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
 
 Then when you run ``collectstatic`` command, your CSS and your javascripts will be compressed in the same time ::
 
-    $ python oslo/manage.py collectstatic
+    $ python manage.py collectstatic
 
+Cache-busting
+-------------
+
+Pipeline 1.2+ no longer provides its own cache-busting URL support (using e.g. the ``PIPELINE_VERSIONING`` setting) but uses
+Django's built-in staticfiles support for this. To set up cache-busting in conjunction with ``collectstatic`` as above, use ::
+
+    STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
+
+This will handle cache-busting just as ``staticfiles``'s built-in ``CachedStaticFilesStorage`` does.
 
 Middleware
 ==========
@@ -65,3 +74,15 @@ Pipeline provide a way to add your javascripts and stylesheets files to a
 cache-manifest via `Manifesto <http://manifesto.readthedocs.org/>`_.
 
 To do so, you just need to add manifesto app to your ``INSTALLED_APPS``.
+
+
+Jinja
+=====
+
+Pipeline also includes Jinja2 support and is used almost identically to the Django Template tags implementation.
+You just need to pass ``pipeline.jinja2.ext.PipelineExtension`` to your Jinja2 environment.
+
+Templates
+---------
+
+Unlike the Django template tag implementation the Jinja2 implementation uses different templates, so if you wish to override them please override pipeline/css.jinja and pipeline/js.jinja.

@@ -66,7 +66,7 @@ Mustache
 ........
 
 To use it with `Mustache <https://github.com/janl/mustache.js>`_ you will need
-this some extra javascript ::
+some extra javascript ::
 
   Mustache.template = function(templateString) {
     return function() {
@@ -78,16 +78,25 @@ this some extra javascript ::
     };
   };
 
-And use this settings ::
+And use these settings ::
 
  PIPELINE_TEMPLATE_EXT = '.mustache'
  PIPELINE_TEMPLATE_FUNC = 'Mustache.template'
+
+Handlebars
+..........
+
+To use it with `Handlebars <http://handlebarsjs.com/>`_, use the following settings ::
+
+ PIPELINE_TEMPLATE_EXT = '.handlebars'
+ PIPELINE_TEMPLATE_FUNC = 'Handlebars.compile'
+ PIPELINE_TEMPLATE_NAMESPACE = 'Handlebars.templates'
 
 
 Prototype
 .........
 
-To use it with `Prototype <http://www.prototypejs.org/>`_, just setup your 
+To use it with `Prototype <http://www.prototypejs.org/>`_, just setup your
 ``PIPELINE_TEMPLATE_FUNC`` ::
 
   PIPELINE_TEMPLATE_FUNC = 'new Template'

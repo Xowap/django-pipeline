@@ -17,10 +17,9 @@ class StylusCompiler(CssCompiler):
         if not (outdated or force):
             return
 
-        command = "%s %s < %s > %s" % (
+        command = "%s %s %s" % (
             settings.PIPELINE_STYLUS_BINARY,
             settings.PIPELINE_STYLUS_ARGUMENTS,
-            infile,
-            outfile
+            infile
         )
         return self.execute_command(command, cwd=dirname(infile))

@@ -4,18 +4,69 @@ History
 =======
 
 
-1.1.24
+1.3.7
+-----
+
+* Don't require Django in setup.py. Thanks to Jannis Leidel.
+* A lot of documentation improvements. Thanks to Jared Scott and Christopher Dilorenzo.
+
+1.3.6
+-----
+
+* Make our threaded code compatible with python 3.
+
+1.3.5
+-----
+
+* Run compilers in threads, should improve performance in DEBUG mode.
+
+1.3.4
+-----
+
+* Fix false errors on subprocess. Thanks to Fabian Büchler.
+* Don't run MinifyHTMLMiddleware when DEBUG is True. Thanks to Venelin Stoykov.
+
+1.3.3
+-----
+
+* Fix subprocess calls.
+
+1.3.2
+-----
+
+* Jinja2 support is back.
+* Many small improvements in documentation.
+
+1.3.1
+-----
+
+* Improve exceptions hierarchy.
+* Improve our sub-process calls.
+* Update uglify-js documentation. Thanks to Andrey Antukh.
+
+1.3.0
+-----
+
+* Add support Python 3, with some help from Alan Lu.
+* Add support for Django 1.5.
+* Remove support for Django < 1.4.
+* Drop support for Python < 2.6.
+* Drop support for ``staticfiles`` app, in favor of ``django.contrib.staticfiles``.
+* Drop ``PIPELINE`` settings, in favor of ``DEBUG`` to avoid confusion.
+* Drop support for ``jinja2`` temporarily.
+
+1.2.24
 ------
 
 * Fix yui/yuglify settings overriding each other. Thanks to Fábio Santos.
 
-1.1.23
+1.2.23
 ------
 
 * Separate yuglify compressor from YUI compressor.
 * Improve HTML compression middleware.
 
-1.1.22
+1.2.22
 ------
 
 * Better compressor error messages. Thanks to Steven Cummings.
@@ -23,7 +74,7 @@ History
 * Fix packaging metadata. Thanks to Rui Coelho for noticing it.
 * Add documentation about non-packing storage.
 
-1.1.21
+1.2.21
 ------
 
 * Run stylus even if file is considered outdated.
