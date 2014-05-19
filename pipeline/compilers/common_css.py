@@ -11,9 +11,10 @@ class BaseFileTree(object):
     CSS files. It handles the parsing of them, in order to be able to check
     the modification date of the node itself and all its children.
     """
+    IMPORT_EXP = re.compile(("@import(?:\\s+\\(\\w+\\))?\\s+"
+                             "(\"([^\"\\r\\n]*)\"|'([^'\\r\\n]*)'|`([^`\\r\\n]*)`)"))
+
     files_info = {}
-    import_exp = re.compile('@import\\s+("((?:[^"\r\n]|\\.)*)"|\'((?:[^\'\r\n]'
-                            + '|\\.)*)\'|`((?:[^`]|\\.)*)`)')
     import_css = False
     extensions = ('.css',)
 
@@ -99,7 +100,7 @@ class BaseFileTree(object):
 
         with self.storage.open(name, 'r') as fhdl:
             for line in fhdl.readlines():
-                matches = self.import_exp.findall(line)
+                matches = self.IMPORT_EXP.findall(line)
 
                 for match in matches:
                     filename = ""
