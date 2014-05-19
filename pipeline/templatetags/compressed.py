@@ -4,6 +4,7 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 
 from django import template
 from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from pipeline.conf import settings
 from pipeline.packager import Packager, PackageNotFound
@@ -30,7 +31,7 @@ class CompressedMixin(object):
         return packager.package_for(package_type, package_name)
 
     def render_compressed(self, package, package_type):
-        if not settings.DEBUG:
+        if settings.PIPELINE_ENABLED:
             method = getattr(self, "render_{0}".format(package_type))
             return method(package, package.output_filename)
         else:
@@ -58,7 +59,7 @@ class CompressedCSSNode(CompressedMixin, template.Node):
         context = package.extra_context
         context.update({
             'type': guess_type(path, 'text/css'),
-            'url': staticfiles_storage.url(path)
+            'url': mark_safe(staticfiles_storage.url(path))
         })
         return render_to_string(template_name, context)
 
@@ -84,7 +85,7 @@ class CompressedJSNode(CompressedMixin, template.Node):
         context = package.extra_context
         context.update({
             'type': guess_type(path, 'text/javascript'),
-            'url': staticfiles_storage.url(path)
+            'url': mark_safe(staticfiles_storage.url(path))
         })
         return render_to_string(template_name, context)
 

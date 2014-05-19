@@ -4,7 +4,6 @@ import base64
 import os
 import posixpath
 import re
-import subprocess
 
 from itertools import takewhile
 
@@ -17,6 +16,7 @@ from pipeline.exceptions import CompressorError
 
 URL_DETECTOR = r'url\([\'"]?([^\s)]+\.[a-z]+[^\'"\s]*)[\'"]?\)'
 URL_REPLACER = r'url\(__EMBED__(.+?)(\?\d+)?\)'
+NON_REWRITABLE_URL = re.compile(r'^(http:|https:|data:|//)')
 
 DEFAULT_TEMPLATE_FUNC = "template"
 TEMPLATE_FUNC = r"""var template = function(str){var fn = new Function('obj', 'var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.push(\''+str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/<%=([\s\S]+?)%>/g,function(match,code){return "',"+code.replace(/\\'/g, "'")+",'";}).replace(/<%([\s\S]+?)%>/g,function(match,code){return "');"+code.replace(/\\'/g, "'").replace(/[\r\n\t]/g,' ')+"__p.push('";}).replace(/\r/g,'\\r').replace(/\n/g,'\\n').replace(/\t/g,'\\t')+"');}return __p.join('');");return fn;};"""
@@ -80,9 +80,9 @@ class Compressor(object):
             raise CompressorError("\"%s\" is not a valid variant" % variant)
 
     def compile_templates(self, paths):
-        compiled = ""
+        compiled = []
         if not paths:
-            return compiled
+            return ''
         namespace = settings.PIPELINE_TEMPLATE_NAMESPACE
         base_path = self.base_path(paths)
         for path in paths:
@@ -90,17 +90,17 @@ class Compressor(object):
             contents = re.sub("\r?\n", "\\\\n", contents)
             contents = re.sub("'", "\\'", contents)
             name = self.template_name(path, base_path)
-            compiled += "%s['%s'] = %s('%s');\n" % (
+            compiled.append("%s['%s'] = %s('%s');\n" % (
                 namespace,
                 name,
                 settings.PIPELINE_TEMPLATE_FUNC,
                 contents
-            )
+            ))
         compiler = TEMPLATE_FUNC if settings.PIPELINE_TEMPLATE_FUNC == DEFAULT_TEMPLATE_FUNC else ""
         return "\n".join([
             "%(namespace)s = %(namespace)s || {};" % {'namespace': namespace},
             compiler,
-            compiled
+            ''.join(compiled)
         ])
 
     def base_path(self, paths):
@@ -118,7 +118,7 @@ class Compressor(object):
         name = re.sub(r"^%s[\/\\]?(.*)%s$" % (
             re.escape(base), re.escape(settings.PIPELINE_TEMPLATE_EXT)
         ), r"\1", path)
-        return re.sub(r"[\/\\]", "_", name)
+        return re.sub(r"[\/\\]", settings.PIPELINE_TEMPLATE_SEPARATOR, name)
 
     def concatenate_and_rewrite(self, paths, output_filename, variant=None):
         """Concatenate together files and rewrite urls"""
@@ -126,7 +126,7 @@ class Compressor(object):
         for path in paths:
             def reconstruct(match):
                 asset_path = match.group(1)
-                if asset_path.startswith("http") or asset_path.startswith("//"):
+                if NON_REWRITABLE_URL.match(asset_path):
                     return "url(%s)" % asset_path
                 asset_url = self.construct_asset_path(asset_path, path,
                                                       output_filename, variant)
@@ -177,7 +177,7 @@ class Compressor(object):
         if path in self.__class__.asset_contents:
             return self.__class__.asset_contents[path]
         data = self.read_bytes(path)
-        self.__class__.asset_contents[path] = base64.b64encode(data)
+        self.__class__.asset_contents[path] = force_text(base64.b64encode(data))
         return self.__class__.asset_contents[path]
 
     def mime_type(self, path):
@@ -227,13 +227,14 @@ class CompressorBase(object):
 
 class SubProcessCompressor(CompressorBase):
     def execute_command(self, command, content):
+        import subprocess
         pipe = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         if content:
             content = smart_bytes(content)
         stdout, stderr = pipe.communicate(content)
-        if stderr.strip():
+        if stderr.strip() and pipe.returncode != 0:
             raise CompressorError(stderr)
-        if self.verbose:
+        elif self.verbose:
             print(stderr)
-        return stdout
+        return force_text(stdout)

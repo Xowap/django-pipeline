@@ -17,7 +17,7 @@ class SASSCompiler(CssCompiler):
         if not (outdated or force):
             return
 
-        command = "%s %s --update %s:%s" % (
+        command = "%s %s %s:%s" % (
             settings.PIPELINE_SASS_BINARY,
             settings.PIPELINE_SASS_ARGUMENTS,
             infile,

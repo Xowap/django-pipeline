@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
-import multiprocessing
 import os
-import subprocess
 
-from concurrent import futures
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
 
 from django.contrib.staticfiles import finders
 from django.core.files.base import ContentFile
@@ -32,22 +33,26 @@ class Compiler(object):
                 if compiler.match_file(input_path):
                     output_path = self.output_path(input_path, compiler.output_extension)
                     infile = finders.find(input_path)
-                    outfile = finders.find(output_path)
-                    if outfile is None:
-                        outfile = self.output_path(infile, compiler.output_extension)
-                        outdated = True
-                    else:
-                        outdated = compiler.is_outdated(infile, outfile)
+                    outfile = self.output_path(infile, compiler.output_extension)
+                    outdated = compiler.is_outdated(input_path, output_path)
                     try:
-                        compiler.compile_file(infile, outfile, outdated=outdated, force=force)
+                        compiler.compile_file(quote(infile), quote(outfile),
+                            outdated=outdated, force=force)
                     except CompilerError:
                         if not self.storage.exists(output_path) or settings.DEBUG:
                             raise
                     return output_path
             else:
                 return input_path
-        with futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-            return list(executor.map(_compile, paths))
+
+        try:
+            import multiprocessing
+            from concurrent import futures
+        except ImportError:
+            return list(map(_compile, paths))
+        else:
+            with futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+                return list(executor.map(_compile, paths))
 
     def output_path(self, path, extension):
         path = os.path.splitext(path)
@@ -80,6 +85,7 @@ class CompilerBase(object):
 
 class SubProcessCompiler(CompilerBase):
     def execute_command(self, command, content=None, cwd=None):
+        import subprocess
         pipe = subprocess.Popen(command, shell=True, cwd=cwd,
                                 stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                 stderr=subprocess.PIPE)

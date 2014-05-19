@@ -3,6 +3,117 @@
 History
 =======
 
+1.3.24
+------
+
+* Quote path before passing them to compilers.
+* Add documentation around PIPELINE_MIMETYPES.
+
+1.3.23
+------
+
+* Fix gzip mixin regression. Thanks to Sayed Raianul Kabir.
+* Improve PipelineStorage listdir method. Thanks to Julien Hartmann.
+* Fix setup.py. Thanks to Benjamin Peterson and Colin Dunklau.
+
+1.3.22
+------
+
+* Fix mimetype declaration. Thanks to Thomas Parslow.
+* Fix gzip mixin. Thanks to Sayed Raianul Kabir.
+* Small documentation improvements. Thanks to Kristoffer Smedlund for the report.
+
+1.3.21
+------
+
+* Fix whitespace and charset in templates tags output. Thanks to Philipp Wollermann.
+* Various documentation fixes. Thanks to Chris Applegate, Natal Ngetal, DJ Sharkey and Andy Kish.
+* Fix bug in data-uri handling when running Python 3. Thanks to Sander Steffann.
+
+1.3.20
+------
+
+* Allow to run compilation without multiprocessing. Thanks to Rajiv Bose.
+* Don't rewrite data-uri. Thanks to Tomek Paczkowski.
+* Fix manifesto support.
+
+1.3.19
+------
+
+* Allow to pre-compress files via ``pipeline.storage.GZIPMixin``. Thanks to Edwin Lunando for the suggestion and early prototype.
+* Improve post processing.
+
+1.3.18
+------
+
+* Performance improvements. Thanks to Miguel Araujo Perez.
+
+1.3.17
+------
+
+* Improve tests.
+* Escape url in template tags. Thanks to Joshua Kehn.
+* Allow to change javascript templates separator. Thanks to Axel Haustant.
+
+1.3.16
+------
+
+* Fix python3 compatibility. Thanks to Stephan Wienczny.
+* Various documentation improvements. Thanks to Chrish Clark, Michael Angeletti and Gokmen Gorgen.
+* Tests improvements. Thanks to Michał Górny.
+
+1.3.15
+------
+
+* Fix unicode handling in sub-process commands. Thanks to Caio Ariede.
+* MinifyHTMLMiddleware use PIPELINE_ENABLED. Thanks to Caio Ariede.
+* Add useful finders. Thanks to Danielle Madeley.
+
+1.3.14
+------
+
+* Fix prefix handling. Thanks to Brian Montgomery.
+* Recalculate Content-Length after minifying HTML. Thanks to Camilo Nova.
+* Improve compiler outdated detection. Thanks to Hannes Ljungberg.
+
+1.3.13
+------
+
+* Don't hardcode SASS arguments. Thanks to Cal Leeming.
+* Fix tests packaging (again). Thanks to Andrew Grigorev.
+
+1.3.12
+------
+
+* Add minimal GAE support.
+* Make file globing deterministic. Thanks to Adam Charnock.
+* Fix tests packaging. Thanks to Mike Gilbert.
+
+1.3.11
+------
+
+* Fix Windows specific bug. Thanks to Tom Yam.
+
+1.3.10
+------
+
+* Add ``PIPELINE_ENABLED`` settings. Huge thanks to Carl Meyer.
+* Update compass compiler documentation. Thanks to Camilo Nova.
+
+1.3.9
+-----
+
+* Fix regression in Compiler. Thanks to David Hughes.
+
+1.3.8
+-----
+
+* Improve compiler API. Thanks to Remy Sanchez.
+* Improve documentation on cache busting via staticfiles. Thanks to Rami Chowdhury.
+* Fix url() bug for url with querystring and hash in them. Thanks to Miroslav Shubernetskiy.
+* Add third party compilers in documentation. Thanks to Jared Scott.
+* Fix extension compatibility with both jinja2 and coffin. Thanks to Mark Sandstrom.
+* Add Livescript compiler. Thanks to Arnar Yngvason.
 
 1.3.7
 -----
