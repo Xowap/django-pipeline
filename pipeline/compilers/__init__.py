@@ -80,7 +80,12 @@ class CompilerBase(object):
         return content
 
     def is_outdated(self, infile, outfile):
-        return self.storage.modified_time(infile) > self.storage.modified_time(outfile)
+        infile_exists = self.storage.exists(infile)
+
+        if infile_exists and self.storage.exists(outfile):
+            return self.storage.modified_time(infile) > self.storage.modified_time(outfile)
+        else:
+            return infile_exists
 
 
 class SubProcessCompiler(CompilerBase):
