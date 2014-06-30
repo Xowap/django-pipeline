@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 
 from django.contrib.staticfiles.finders import get_finders
+from django.contrib.staticfiles.storage import staticfiles_storage
 
 from pipeline.conf import settings
 
@@ -33,15 +34,16 @@ class PipelineManifest(Manifest):
     def cache(self):
         ignore_patterns = getattr(settings, "STATICFILES_IGNORE_PATTERNS", None)
 
-        if not settings.DEBUG:
+        if settings.PIPELINE_ENABLED:
             for package in self.packages:
-                self.package_files.append(package.output_filename)
-                yield str(self.packager.individual_url(package.output_filename))
+                path = package.output_filename
+                self.package_files.append(path)
+                yield staticfiles_storage.url(path)
         else:
             for package in self.packages:
                 for path in self.packager.compile(package.paths):
                     self.package_files.append(path)
-                    yield str(self.packager.individual_url(path))
+                    yield staticfiles_storage.url(path)
 
         for finder in self.finders:
             for path, storage in finder.list(ignore_patterns):
@@ -54,4 +56,4 @@ class PipelineManifest(Manifest):
                 # Dont add any doubles
                 if prefixed_path not in self.package_files:
                     self.package_files.append(prefixed_path)
-                    yield str(self.packager.individual_url(prefixed_path))
+                    yield staticfiles_storage.url(prefixed_path)

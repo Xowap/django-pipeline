@@ -11,9 +11,10 @@ class BaseFileTree(object):
     CSS files. It handles the parsing of them, in order to be able to check
     the modification date of the node itself and all its children.
     """
+    IMPORT_EXP = re.compile(("@import(?:\\s+\\(\\w+\\))?\\s+"
+                             "(\"([^\"\\r\\n]*)\"|'([^'\\r\\n]*)'|`([^`\\r\\n]*)`)"))
+
     files_info = {}
-    import_exp = re.compile('@import\\s+("((?:[^"\r\n]|\\.)*)"|\'((?:[^\'\r\n]'
-                            + '|\\.)*)\'|`((?:[^`]|\\.)*)`)')
     import_css = False
     extensions = ('.css',)
 
@@ -50,7 +51,7 @@ class BaseFileTree(object):
 
         self.update_info()
 
-        if self.mtime > target_time or self.children is None:
+        if target_time is None or self.mtime > target_time or self.children is None:
             self.update_children()
 
         for child in self.children:
@@ -99,7 +100,7 @@ class BaseFileTree(object):
 
         with self.storage.open(name, 'r') as fhdl:
             for line in fhdl.readlines():
-                matches = self.import_exp.findall(line)
+                matches = self.IMPORT_EXP.findall(line)
 
                 for match in matches:
                     filename = ""
@@ -159,13 +160,17 @@ class CssCompiler(SubProcessCompiler):
             infile,
             self.get_search_path()
         )
-        target_time = self.storage.modified_time(outfile)
+
+        if self.storage.exists(outfile):
+            target_time = self.storage.modified_time(outfile)
+        else:
+            target_time = None
 
         for node in tree.flatlist(target_time):
-            if node.mtime > target_time:
+            if target_time is None or node.mtime > target_time:
                 return True
 
-        return False
+        return False or target_time is None
 
 
 def get_by_name(actual_class, storage, name, searchpath=None):

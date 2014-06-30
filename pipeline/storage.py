@@ -1,11 +1,15 @@
 from __future__ import unicode_literals
 
-import os
+import gzip
+
+from io import BytesIO
 
 from django.contrib.staticfiles import finders
-from django.contrib.staticfiles.storage import CachedFilesMixin, StaticFilesStorage
+from django.contrib.staticfiles.storage import CachedStaticFilesStorage, StaticFilesStorage
+from django.contrib.staticfiles.utils import matches_patterns
 
 from django.core.exceptions import ImproperlyConfigured
+from django.core.files.base import File
 from django.core.files.storage import get_storage_class
 from django.utils.functional import LazyObject
 
@@ -17,7 +21,7 @@ class PipelineMixin(object):
 
     def post_process(self, paths, dry_run=False, **options):
         if dry_run:
-            return []
+            return
 
         from pipeline.packager import Packager
         packager = Packager(storage=self)
@@ -27,26 +31,59 @@ class PipelineMixin(object):
             if self.packing:
                 packager.pack_stylesheets(package)
             paths[output_file] = (self, output_file)
+            yield output_file, output_file, True
         for package_name in packager.packages['js']:
             package = packager.package_for('js', package_name)
             output_file = package.output_filename
             if self.packing:
                 packager.pack_javascripts(package)
             paths[output_file] = (self, output_file)
+            yield output_file, output_file, True
 
         super_class = super(PipelineMixin, self)
         if hasattr(super_class, 'post_process'):
-            return super_class.post_process(paths, dry_run, **options)
-
-        return [
-            (path, path, True)
-            for path in paths
-        ]
+            for name, hashed_name, processed in super_class.post_process(paths.copy(), dry_run, **options):
+                yield name, hashed_name, processed
 
     def get_available_name(self, name):
         if self.exists(name):
             self.delete(name)
         return name
+
+
+class GZIPMixin(object):
+    gzip_patterns = ("*.css", "*.js")
+
+    def _compress(self, original_file):
+        content = BytesIO()
+        gzip_file = gzip.GzipFile(mode='wb', fileobj=content)
+        gzip_file.write(original_file.read())
+        gzip_file.close()
+        content.seek(0)
+        return File(content)
+
+    def post_process(self, paths, dry_run=False, **options):
+        super_class = super(GZIPMixin, self)
+        if hasattr(super_class, 'post_process'):
+            for name, hashed_name, processed in super_class.post_process(paths.copy(), dry_run, **options):
+                if hashed_name != name:
+                    paths[hashed_name] = (self, hashed_name)
+                yield name, hashed_name, processed
+
+        if dry_run:
+            return
+
+        for path in paths:
+            if path:
+                if not matches_patterns(path, self.gzip_patterns):
+                    continue
+                original_file = self.open(path)
+                gzipped_path = "{0}.gz".format(path)
+                if self.exists(gzipped_path):
+                    self.delete(gzipped_path)
+                gzipped_file = self._compress(original_file)
+                gzipped_path = self.save(gzipped_path, gzipped_file)
+                yield gzipped_path, gzipped_path, True
 
 
 class NonPackagingMixin(object):
@@ -61,7 +98,7 @@ class NonPackagingPipelineStorage(NonPackagingMixin, PipelineStorage):
     pass
 
 
-class PipelineCachedStorage(PipelineMixin, CachedFilesMixin, StaticFilesStorage):
+class PipelineCachedStorage(PipelineMixin, CachedStaticFilesStorage):
     pass
 
 
@@ -92,30 +129,31 @@ class BaseFinderStorage(PipelineStorage):
         return exists
 
     def listdir(self, path):
-        for finder in finders.get_finders():
-            for storage in finder.storages.values():
-                try:
-                    return storage.listdir(path)
-                except OSError:
-                    pass
-
-    def match_location(self, name, path, prefix=None):
-        if prefix:
-            prefix = "%s%s" % (prefix, os.sep)
-            name = name[len(prefix):]
-        if path == name:
-            return name
-        if os.path.splitext(path)[0] == os.path.splitext(name)[0]:
-            return name
-        return None
+        directories, files = [], []
+        for finder in self.finders.get_finders():
+            try:
+                storages = finder.storages.values()
+            except AttributeError:
+                continue
+            else:
+                for storage in storages:
+                    try:
+                        new_directories, new_files = storage.listdir(path)
+                    except OSError:
+                        pass
+                    else:
+                        directories.extend(new_directories)
+                        files.extend(new_files)
+        return directories, files
 
     def find_storage(self, name):
-        for finder in finders.get_finders():
-            for path, storage in finder.list([]):
-                prefix = getattr(storage, 'prefix', None)
-                matched_path = self.match_location(name, path, prefix)
-                if matched_path:
-                    return matched_path, storage
+        for finder in self.finders.get_finders():
+            path = finder.find(name)
+            if path:
+                for storage in finder.storages.values():
+                    if path.startswith(storage.location):
+                        return path, storage
+
         raise ValueError("The file '%s' could not be found with %r." % (name, self))
 
     def _open(self, name, mode="rb"):

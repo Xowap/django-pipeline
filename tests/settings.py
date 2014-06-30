@@ -13,12 +13,16 @@ SITE_ID = 1
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sites',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
     'django.contrib.auth',
     'django.contrib.admin',
     'pipeline',
     'tests',
+    'tests.tests'
 ]
+
+ROOT_URLCONF = 'tests.urls'
 
 MEDIA_URL = '/media/'
 
@@ -47,7 +51,7 @@ PIPELINE_CSS = {
         'source_filenames': (
             'pipeline/css/first.css',
             'pipeline/css/second.css',
-            'pipeline/css/urls.css',
+            'pipeline/css/urls.css'
         ),
         'output_filename': 'screen.css'
     }
@@ -60,6 +64,43 @@ PIPELINE_JS = {
             'pipeline/js/application.js',
             'pipeline/templates/**/*.jst'
         ),
-        'output_filename': 'scripts.css'
+        'output_filename': 'scripts.js'
+    },
+    'scripts_async': {
+        'source_filenames': (
+            'pipeline/js/first.js',
+            'pipeline/js/second.js',
+            'pipeline/js/application.js',
+            'pipeline/templates/**/*.jst'
+        ),
+        'output_filename': 'scripts_async.js',
+        'extra_context': {
+            'async': True,
+        }
+    },
+    'scripts_defer': {
+        'source_filenames': (
+            'pipeline/js/first.js',
+            'pipeline/js/second.js',
+            'pipeline/js/application.js',
+            'pipeline/templates/**/*.jst'
+        ),
+        'output_filename': 'scripts_defer.js',
+        'extra_context': {
+            'defer': True,
+        }
+    },
+    'scripts_async_defer': {
+        'source_filenames': (
+            'pipeline/js/first.js',
+            'pipeline/js/second.js',
+            'pipeline/js/application.js',
+            'pipeline/templates/**/*.jst'
+        ),
+        'output_filename': 'scripts_async_defer.js',
+        'extra_context': {
+            'async': True,
+            'defer': True,
+        }
     }
 }

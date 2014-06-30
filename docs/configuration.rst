@@ -92,6 +92,12 @@ Group options
   For CSS, if you do not specify ``extra_context``/``media``, the default media in
   the ``<link>`` output will be ``media="all"``.
 
+  For JS, the default templates support the ``async`` and ``defer`` tag attributes which are controlled via ``extra_context``: ::
+
+    'extra_context': {
+        'async': True,
+    },
+
 ``manifest``
 ............
 
@@ -104,6 +110,13 @@ Group options
 
 Other settings
 --------------
+
+``PIPELINE_ENABLED``
+....................
+
+  ``True`` if assets should be compressed, ``False`` if not.
+
+  Defaults to ``not settings.DEBUG``.
 
 ``PIPELINE_CSS_COMPRESSOR``
 ............................
@@ -153,6 +166,33 @@ Other settings
   `underscore <http://documentcloud.github.com/underscore/>`_ template function.
 
   Defaults to ``"_.template"``
+
+``PIPELINE_TEMPLATE_SEPARATOR``
+...............................
+
+  Character chain used by Pipeline as replacement for directory separator.
+
+  Defaults to ``"_"``
+
+
+``PIPELINE_MIMETYPES``
+......................
+
+  Tuple that match file extension with their corresponding mimetypes.
+
+  Defaults to ::
+
+    (
+      (b'text/coffeescript', '.coffee'),
+      (b'text/less', '.less'),
+      (b'application/javascript', '.js'),
+      (b'text/x-sass', '.sass'),
+      (b'text/x-scss', '.scss')
+    )
+
+.. warning::
+  If you support Internet Explorer version 8 and below, you should
+  declare javascript files as ``text/javascript``.
 
 
 Embedding fonts and images
